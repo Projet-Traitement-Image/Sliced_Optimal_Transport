@@ -1,12 +1,15 @@
-Im1 = imread("images_projet/dawn.jpg");
-Im2 = imread("images_projet/dawn_cold.jpg");
-Im3 = imread("images_projet/simple_bleu.png");
-Im4 = imread("images_projet/simple_rouge.png");
-Im5 = imread("images_projet/simple_rouge2.png");
+Im1 = imread("images_projet/simple1.png");
+Im2 = imread("images_projet/simple2.png");
+Im3 = imread("images_projet/simple3.png");
+Im4 = imread("images_projet/simple4.png");
+Im5 = imread("images_projet/simple5.png");
 Im6 = imread("images_projet/painting-1.jpg");
 Im7 = imread("images_projet/painting-2.jpg");
+Im8 = imread("images_projet/simple6.png");
+Im9 = imread("images_projet/simple7.png");
+Im10 = imread("images_projet/simple8.png");
 
-sliced_optimal_transport_RGB(Im7, Im6);
+sliced_optimal_transport_RGB(Im3, Im4);
 %sliced_optimal_transport_HSV(Im2, Im1);
 
 function sliced_optimal_transport_HSV(Ix, Iz)
@@ -171,16 +174,15 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   title("Image source");
   subplot(2,4,2);
   imagesc(Iz);
-  title("Image de référence");
+  title({'Image de référence' strcat(num2str(nombre_Iz - 1), ' couleurs')});
   subplot(2,4,3); 
   imagesc(Image_res);
-  title("Résultat de la spécification");
+  title({'Résultat de la spécification' strcat(num2str(nombre_Res - 1), ' couleurs')});
   subplot(2,4,4);
   mymap = [1 1 0
     1 0.5 0
     1 0 0
-    1 0 1
-    1 1 1];
+    1 0 1];
   imagesc(label2rgb(Image_diff, mymap, 'green'));
   title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});
   subplot(2,4,5);
