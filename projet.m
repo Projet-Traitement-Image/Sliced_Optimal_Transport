@@ -9,7 +9,7 @@ Im8 = imread("images_projet/simple6.png");
 Im9 = imread("images_projet/simple7.png");
 Im10 = imread("images_projet/simple8.png");
 
-sliced_optimal_transport_RGB(Im3, Im4);
+sliced_optimal_transport_RGB(Im7, Im6);
 %sliced_optimal_transport_HSV(Im2, Im1);
 
 function sliced_optimal_transport_HSV(Ix, Iz)
@@ -119,36 +119,23 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   R_Ix = Ix(:,:,1);
   V_Ix = Ix(:,:,2);
   B_Ix = Ix(:,:,3);
-  %On transforme les matrices des canaux de l'image source en vecteurs
-  %colonnes
-  R_Ix_Column = reshape(R_Ix, [], 1);
-  V_Ix_Column = reshape(V_Ix, [], 1);
-  B_Ix_Column = reshape(B_Ix, [], 1);
 
   R_Iz = Iz(:,:,1);
   V_Iz = Iz(:,:,2);
   B_Iz = Iz(:,:,3);
-  %On transforme les matrices des canaux de l'image de référence en vecteurs
-  %colonnes
-  R_Iz_Column = reshape(R_Iz, [], 1);
-  V_Iz_Column = reshape(V_Iz, [], 1);
-  B_Iz_Column = reshape(B_Iz, [], 1);
 
   %On fait la spécification de chaques canaux
   R_Res = specification(R_Ix, R_Iz);
   V_Res = specification(V_Ix, V_Iz);
   B_Res = specification(B_Ix, B_Iz);
 
-  %On transforme les matrices des canaux résultants 
-  %en vector colonnes pour afficher 
-  %l'histogramme 3D
-  R_Res_Column = reshape(R_Res, [], 1);
-  V_Res_Column = reshape(V_Res, [], 1);
-  B_Res_Column = reshape(B_Res, [], 1);
-
   %Assemblage des trois canaux obtenus après spécification pour obtenir
   %l'image couleur résultante
   Image_res = cat(3, R_Res, V_Res, B_Res);
+  
+  %On récupère les couleurs de l'image source ainsi que leur nombre
+  [tab_couleurs_Ix, nombre_Ix] = compter_couleurs(Ix);
+  disp(strcat('L''image source possède ', num2str(nombre_Ix - 1), ' couleurs'));
   
   %On récupère les différentes couleurs ainsi que leur nombre
   %de l'image de référence
@@ -167,17 +154,39 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   %couleur
   Image_diff = evaluation_distance(tab_distances, tab_couleurs_Res, Image_res);
   
-
+  %On transforme la matrice des couleurs de l'image de référence
+  %en vecteurs colonnes pour afficher
+  %l'histogramme 3D avec scatter3
+  couleurs_ref = tab_couleurs_Iz(1:nombre_Iz-1,:);
+  x_ref = couleurs_ref(:,1);
+  y_ref = couleurs_ref(:,2);
+  z_ref = couleurs_ref(:,3);
+  
+  %On fait de même pour l'image obtenue après la spécification
+  couleurs_spe = tab_couleurs_Res(1:nombre_Res-1,:);
+  x_spe = couleurs_spe(:,1);
+  y_spe = couleurs_spe(:,2);
+  z_spe = couleurs_spe(:,3);
+  
+  %Et pour l'image source
+  couleurs_source = tab_couleurs_Ix(1:nombre_Ix-1,:);
+  x_source = couleurs_source(:,1);
+  y_source = couleurs_source(:,2);
+  z_source = couleurs_source(:,3);
+    
   figure
   subplot(2,4,1);
   imagesc(Ix);
-  title("Image source");
+  title({'Image source' strcat(num2str(nombre_Ix - 1), ' couleurs')});
+  
   subplot(2,4,2);
   imagesc(Iz);
   title({'Image de référence' strcat(num2str(nombre_Iz - 1), ' couleurs')});
+  
   subplot(2,4,3); 
   imagesc(Image_res);
   title({'Résultat de la spécification' strcat(num2str(nombre_Res - 1), ' couleurs')});
+  
   subplot(2,4,4);
   mymap = [1 1 0
     1 0.5 0
@@ -185,36 +194,38 @@ function sliced_optimal_transport_RGB(Ix, Iz)
     1 0 1];
   imagesc(label2rgb(Image_diff, mymap, 'green'));
   title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});
+  
   subplot(2,4,5);
-  %[yRed_Source, ~] = imhist(R_Ix);
-  %[yGreen_Source, ~] = imhist(V_Ix);
-  %[yBlue_Source, x] = imhist(B_Ix);
-  %plot(x, yRed_Source, "Red", x, yGreen_Source, "Green", x, yBlue_Source, "Blue");
-  scatter3(R_Ix_Column, V_Ix_Column, B_Ix_Column, 2, 'magenta');
+  h_source = scatter3(x_source, y_source, z_source, 30, 'filled');
+  h_source.CData = couleurs_source./255;
   xlim([0 255]);
   ylim([0 255]);
   zlim([0 255]);
+  xlabel('Rouge');
+  ylabel('Vert');
+  zlabel('Bleu');
   title("Histogramme de l'image source");
+  
   subplot(2,4,6);
-  %[yRed_Ref, x] = imhist(R_Iz);
-  %[yGreen_Ref, y] = imhist(V_Iz);
-  %[yBlue_Ref, z] = imhist(B_Iz);
-  %plot(x, yRed_Ref, "Red", x, yGreen_Ref, "Green", x, yBlue_Ref, "Blue");
-  scatter3(R_Iz_Column, V_Iz_Column, B_Iz_Column, 2, 'magenta');
-  %maximum = max([max(max(yRed_Ref(:))) max(max(yGreen_Ref(:))) max(max(yBlue_Ref(:)))]);
+  h_ref = scatter3(x_ref, y_ref, z_ref, 30, 'filled');
+  h_ref.CData = couleurs_ref./255;
   xlim([0 255]);
   ylim([0 255]);
   zlim([0 255]);
+  xlabel('Rouge');
+  ylabel('Vert');
+  zlabel('Bleu');
   title("Histogramme de l'image de référence");
+  
   subplot(2,4,7);
-  %[yRed_Res, ~] = imhist(R_Res);
-  %[yGreen_Res, ~] = imhist(V_Res);
-  %[yBlue_Res, x] = imhist(B_Res);
-  %plot(x, yRed_Res, "Red", x, yGreen_Res, "Green", x, yBlue_Res, "Blue");  
-  scatter3(R_Res_Column, V_Res_Column, B_Res_Column, 2, 'magenta');
+  h_spe = scatter3(x_spe, y_spe, z_spe, 30, 'filled');
+  h_spe.CData = couleurs_spe./255;
   xlim([0 255]);
   ylim([0 255]);
   zlim([0 255]);
+  xlabel('Rouge');
+  ylabel('Vert');
+  zlabel('Bleu');
   title("Histogramme du résultat de la spécification");
 end
 
