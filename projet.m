@@ -1,5 +1,5 @@
 Im1 = imread("images_projet/dawn.jpg");
-Im2 = imread("images_projet/dawn3.jpg");
+Im2 = imread("images_projet/dawn_cold.jpg");
 Im3 = imread("images_projet/simple_bleu.png");
 Im4 = imread("images_projet/simple_rouge.png");
 Im5 = imread("images_projet/simple_rouge2.png");
@@ -7,7 +7,7 @@ Im6 = imread("images_projet/painting-1.jpg");
 Im7 = imread("images_projet/painting-2.jpg");
 
 sliced_optimal_transport_RGB(Im7, Im6);
-sliced_optimal_transport_HSV(Im7, Im6);
+%sliced_optimal_transport_HSV(Im2, Im1);
 
 function sliced_optimal_transport_HSV(Ix, Iz)
 
@@ -18,6 +18,12 @@ function sliced_optimal_transport_HSV(Ix, Iz)
   H_Ix = Ix_HSV(:,:,1);
   S_Ix = Ix_HSV(:,:,2);
   V_Ix = Ix_HSV(:,:,3);
+  
+  %On transforme les matrices des canaux de l'image source en vecteurs
+  %colonnes
+  H_Ix_Column = reshape(H_Ix, [], 1);
+  S_Ix_Column = reshape(S_Ix, [], 1);
+  V_Ix_Column = reshape(V_Ix, [], 1);
 
   H_Iz = Iz_HSV(:,:,1);
   S_Iz = Iz_HSV(:,:,2);
@@ -27,56 +33,81 @@ function sliced_optimal_transport_HSV(Ix, Iz)
   H_Res = specification(H_Ix, H_Iz);
   S_Res = specification(S_Ix, S_Iz);
   V_Res = specification(V_Ix, V_Iz);
+  
+  %On transforme les matrices des canaux de l'image de référence en vecteurs
+  %colonnes
+  R_Iz_Column = reshape(H_Iz, [], 1);
+  V_Iz_Column = reshape(S_Iz, [], 1);
+  B_Iz_Column = reshape(V_Iz, [], 1);
 
   %Assemblage des trois canaux obtenus après spécification pour obtenir
   %l'image couleur résultante
   res = cat(3, H_Res, S_Res, V_Res);
+  
+  %On transforme les matrices des canaux résultants 
+  %en vector colonnes pour afficher 
+  %l'histogramme 3D
+  H_Res_Column = reshape(H_Res, [], 1);
+  S_Res_Column = reshape(S_Res, [], 1);
+  V_Res_Column = reshape(V_Res, [], 1);
+  
   Image_res = double(res)./255.;
   Image_res = hsv2rgb(Image_res);
 
   figure
-  subplot(3,3,1);
+  subplot(3,4,1);
   imagesc(Ix);
   title("Image source RGB");
-  subplot(3,3,2);
+  subplot(3,4,2);
   imagesc(Iz);
   title("Image de référence RGB");
-  subplot(3,3,3); 
-  imshow(Image_res);
+  subplot(3,4,3); 
+  imagesc(Image_res);
   title("Résultat de la spécification RGB");
-  subplot(3,3,4);
+  %{
+  subplot(3,4,4);
+  mymap = [1 1 0
+    1 0.5 0
+    1 0 0
+    1 0 1];
+  imagesc(label2rgb(Image_Diff, mymap, 'green'));
+  title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});
+  %}
+  subplot(3,4,5);
   imagesc(Ix_HSV);
   title("Image source HSV");
-  subplot(3,3,5);
+  subplot(3,4,6);
   imagesc(Iz_HSV);
   title("Image de référence HSV");
-  subplot(3,3,6); 
+  subplot(3,4,7); 
   imagesc(res);
   title("Résultat de la spécification HSV");
-  subplot(3,3,7);
-  [yRed_Source, ~] = imhist(H_Ix);
-  [yGreen_Source, ~] = imhist(S_Ix);
-  [yBlue_Source, x] = imhist(V_Ix);
-  plot(x, yRed_Source, "Red", x, yGreen_Source, "Green", x, yBlue_Source, "Blue");
+  subplot(3,4,9);
+  %[yRed_Source, ~] = imhist(H_Ix);
+  %[yGreen_Source, ~] = imhist(S_Ix);
+  %[yBlue_Source, x] = imhist(V_Ix);
+  %plot(x, yRed_Source, "Red", x, yGreen_Source, "Green", x, yBlue_Source, "Blue");
+  scatter3(H_Ix_Column, S_Ix_Column, V_Ix_Column, 2, 'magenta');
   xlim([0 255]);
   title("Histogramme de l'image source HSV");
-  subplot(3,3,8);
-  [yRed_Ref, ~] = imhist(H_Iz);
-  [yGreen_Ref, ~] = imhist(S_Iz);
-  [yBlue_Ref, x] = imhist(V_Iz);
-  plot(x, yRed_Ref, "Red", x, yGreen_Ref, "Green", x, yBlue_Ref, "Blue");
-  %scatter3(yRed_Ref, yGreen_Ref, yBlue_Ref);
-  maximum = max([max(max(yRed_Ref(:))) max(max(yGreen_Ref(:))) max(max(yBlue_Ref(:)))]);
+  subplot(3,4,10);
+  %[yRed_Ref, ~] = imhist(H_Iz);
+  %[yGreen_Ref, ~] = imhist(S_Iz);
+  %[yBlue_Ref, x] = imhist(V_Iz);
+  %plot(x, yRed_Ref, "Red", x, yGreen_Ref, "Green", x, yBlue_Ref, "Blue");
+  scatter3(R_Iz_Column, V_Iz_Column, B_Iz_Column, 2, 'magenta');
+  %maximum = max([max(max(yRed_Ref(:))) max(max(yGreen_Ref(:))) max(max(yBlue_Ref(:)))]);
   xlim([0 255]);
-  ylim([0 maximum]);
+  ylim([0 255]);
   title("Histogramme de l'image de référence HSV");
-  subplot(3,3,9);
-  [yRed_Res, ~] = imhist(H_Res);
-  [yGreen_Res, ~] = imhist(S_Res);
-  [yBlue_Res, x] = imhist(V_Res);
-  plot(x, yRed_Res, "Red", x, yGreen_Res, "Green", x, yBlue_Res, "Blue");
+  subplot(3,4,11);
+  %[yRed_Res, ~] = imhist(H_Res);
+  %[yGreen_Res, ~] = imhist(S_Res);
+  %[yBlue_Res, x] = imhist(V_Res);
+  %plot(x, yRed_Res, "Red", x, yGreen_Res, "Green", x, yBlue_Res, "Blue");
+  scatter3(H_Res_Column, S_Res_Column, V_Res_Column, 2, 'magenta');
   xlim([0 255]);
-  ylim([0 maximum]);
+  ylim([0 255]);
   title("Histogramme du résultat de la spécification HSV");
 end
 
@@ -94,7 +125,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   R_Iz = Iz(:,:,1);
   V_Iz = Iz(:,:,2);
   B_Iz = Iz(:,:,3);
-  %On transforme les matrices des canaux de l'image source en vecteurs
+  %On transforme les matrices des canaux de l'image de référence en vecteurs
   %colonnes
   R_Iz_Column = reshape(R_Iz, [], 1);
   V_Iz_Column = reshape(V_Iz, [], 1);
@@ -105,7 +136,8 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   V_Res = specification(V_Ix, V_Iz);
   B_Res = specification(B_Ix, B_Iz);
 
-  %On transforme les matrices des canaux en vector colonnes pour afficher 
+  %On transforme les matrices des canaux résultants 
+  %en vector colonnes pour afficher 
   %l'histogramme 3D
   R_Res_Column = reshape(R_Res, [], 1);
   V_Res_Column = reshape(V_Res, [], 1);
@@ -114,18 +146,44 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   %Assemblage des trois canaux obtenus après spécification pour obtenir
   %l'image couleur résultante
   Image_res = cat(3, R_Res, V_Res, B_Res);
+  
+  %On récupère les différentes couleurs ainsi que leur nombre
+  %de l'image de référence
+  [tab_couleurs_Iz, nombre_Iz] = compter_couleurs(Iz);
+  disp(strcat('L''image de référence possède ', num2str(nombre_Iz - 1), ' couleurs'));
+  
+  %On fait de même pour l'image obtenue après la spécification
+  [tab_couleurs_Res, nombre_Res] = compter_couleurs(Image_res);
+  disp(strcat('L''image obtenue après la spécification possède ', num2str(nombre_Res - 1), ' couleurs'));
+  
+  %Puis on analyse les différences de couleurs entre l'image de référence
+  % et celle obtenue après la spécification
+  tab_distances = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res);
+  
+  %Puis, on évalue les différences de distance afin de créer un code
+  %couleur
+  Image_diff = evaluation_distance(tab_distances, tab_couleurs_Res, Image_res);
+  
 
   figure
-  subplot(2,3,1);
+  subplot(2,4,1);
   imagesc(Ix);
   title("Image source");
-  subplot(2,3,2);
+  subplot(2,4,2);
   imagesc(Iz);
   title("Image de référence");
-  subplot(2,3,3); 
+  subplot(2,4,3); 
   imagesc(Image_res);
   title("Résultat de la spécification");
-  subplot(2,3,4);
+  subplot(2,4,4);
+  mymap = [1 1 0
+    1 0.5 0
+    1 0 0
+    1 0 1
+    1 1 1];
+  imagesc(label2rgb(Image_diff, mymap, 'green'));
+  title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});
+  subplot(2,4,5);
   %[yRed_Source, ~] = imhist(R_Ix);
   %[yGreen_Source, ~] = imhist(V_Ix);
   %[yBlue_Source, x] = imhist(B_Ix);
@@ -135,7 +193,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   ylim([0 255]);
   zlim([0 255]);
   title("Histogramme de l'image source");
-  subplot(2,3,5);
+  subplot(2,4,6);
   %[yRed_Ref, x] = imhist(R_Iz);
   %[yGreen_Ref, y] = imhist(V_Iz);
   %[yBlue_Ref, z] = imhist(B_Iz);
@@ -146,7 +204,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   ylim([0 255]);
   zlim([0 255]);
   title("Histogramme de l'image de référence");
-  subplot(2,3,6);
+  subplot(2,4,7);
   %[yRed_Res, ~] = imhist(R_Res);
   %[yGreen_Res, ~] = imhist(V_Res);
   %[yBlue_Res, x] = imhist(B_Res);
@@ -191,26 +249,26 @@ function H = histogramme (I) % fonction qui prend en paramètre une image I
     end
 end
 
-function Im_diff = pixels_diff(Im1, Im2)
-    [m, n, ~] = size(Im1);
-    Im_diff = zeros(m, n);
+function Im_diff = evaluation_distance(tab_distances, tab_couleurs, I_spe)
+    %On récupère la taille de l'image
+    [m,n,~] = size(I_spe);
+    %tab_distances
+    %On récupère la taille du tableau
+    tab_size = size(tab_distances, 2);
+    Im_diff = zeros(m,n);
     
-    Im1_d = double(Im1);
-    Im2_d = double(Im2);
-    
-    for i = 1:m
-        for j = 1:n
-            if(abs(Im1_d(i,j) - Im2_d(i,j)) <= 25)
-                Im_diff(i,j) = 0;
-            elseif(abs(Im1_d(i,j) - Im2_d(i,j)) > 25 && abs(Im1_d(i,j) - Im2_d(i,j)) <= 50)
-                Im_diff(i,j) = 1;
-            elseif(abs(Im1_d(i,j) - Im2_d(i,j)) > 50 && abs(Im1_d(i,j) - Im2_d(i,j)) <= 75)
-                Im_diff(i,j) = 2;
-            elseif(abs(Im1_d(i,j) - Im2_d(i,j)) > 75 && abs(Im1_d(i,j) - Im2_d(i,j)) <= 100)
-                Im_diff(i,j) = 3;
-            else
-                Im_diff(i,j) = 4;
-            end
+    for i = 1:tab_size
+        if tab_distances(1,i) >= 0.0 && tab_distances(1,i) < 3.0
+           %On récupère tous les pixels dont la couleur est située au même indice
+           Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 0;
+        elseif tab_distances(1,i) >= 3.0 && tab_distances(1,i) < 5.0
+           Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 1;
+        elseif tab_distances(1,i) >= 5.0 && tab_distances(1,i) < 7.5
+            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 2;
+        elseif tab_distances(1,i) >= 7.5 && tab_distances(1,i) < 10.0
+            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 3;
+        else
+            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 4;
         end
     end
 end
@@ -249,7 +307,9 @@ function Image_res = specification (Ix, Iz)
     g_moins_un(i) = indice_plus_proche(HCN_Ix(i), HCN_Iz);
   end
 
+  %On crée l'image résultante de la spécification
   Image_res = uint8(g_moins_un(Ix + 1) - 1);
+  %Ainsi que la matrice des différences de distances
   %Image_diff = pixels_diff(Iz, Image_res);
   %Image_diff
 
@@ -295,15 +355,6 @@ function Image_res = specification (Ix, Iz)
   xlim([0 255]);
   ylim([0 max(imhist(Iz))]);
   title('Histogramme du résultat de la spécification');
-  %{
-  subplot(5,2,9);
-    mymap = [1 1 0
-    1 0.5 0
-    1 0 0
-    1 0 1];
-  imshow(label2rgb(Image_diff, mymap, 'green'));
-  title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});
-  %}
 end
 
 function res = indice_plus_proche(x, hist)
@@ -326,14 +377,105 @@ function res = indice_plus_proche(x, hist)
        %On regarde si x est plus proche de la valeur de cet indice ou du
        %précédent
        if min_intervalle >= (x - hist(i))
-        res = i;
+        res = i;      
        else
         res = i - 1;
        end
      else
-       %on actualise la valeur de l'intervalle
        min_intervalle = x - hist(i);
        i = i + 1;
      end
-   end
+   end    
+end
+
+function [tab_couleurs, nombre] = compter_couleurs(I)
+ % On récupère les dimensions de l'image
+ [m, n, ~] = size(I);
+ %On crée un tableau contenant les couleurs de l'image
+ tab_couleurs = zeros(m*n, 3);
+ %On initialise le compteur sur la nombre de couleurs
+ nombre = 1;
+ %On sépare les différents canaux R, G et B de l'image
+ Red_channel = I(:,:,1);
+ Green_channel = I(:,:,2);
+ Blue_channel = I(:,:,3);
+ 
+ %On parcours l'ensemble des pixels de l'image
+ for i = 1:m
+     for j = 1:n
+         %On récupère les trois valeurs du pixels
+         Red = Red_channel(i,j);
+         Green = Green_channel(i,j);
+         Blue = Blue_channel(i,j);
+         %puis on regarde si cette couleur est déjà présente dans le
+         %tableau des couleurs
+         estPresente = false;
+         l = 1;
+         while ~estPresente && l < nombre
+             if(tab_couleurs(l, 1) == Red && tab_couleurs(l, 2) == Green && tab_couleurs(l, 3) == Blue)
+                 estPresente = true;
+             else
+                 l = l + 1;
+             end
+         end
+         %Si la couleur n'est pas présente dans le tableau, on l'ajoute
+         if ~estPresente
+             tab_couleurs(nombre, 1) = Red;
+             tab_couleurs(nombre, 2) = Green;
+             tab_couleurs(nombre, 3) = Blue;
+             nombre = nombre + 1;
+         end
+     end
+ end
+end
+
+function tab_distances = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab_couleurs_Spe, nb_couleurs_Spe)
+    %On commence par passer les deux tableaux de couleurs en double
+    %pour faciliter les calculs
+    tab_couleurs_Ref = double(tab_couleurs_Ref);
+    tab_couleurs_Spe = double(tab_couleurs_Spe);
+    
+    %On crée le tableau des différences de couleurs
+    %égal au nombre de couleurs dans l'image obtenue après la spécification
+    tab_distances = zeros(1, nb_couleurs_Spe - 1);
+    
+    %On parcourt ensuite le tableau de couleurs de l'image obtenues après
+    %spécification
+    for i = 1:nb_couleurs_Spe-1
+        %On récupère les différentes valeurs de canal RGB
+        Red_spe = tab_couleurs_Spe(i, 1);
+        Green_spe = tab_couleurs_Spe(i, 2);
+        Blue_spe = tab_couleurs_Spe(i, 3);
+        %puis on regarde si cette couleur se retrouve dans l'image de
+        %référence
+        estIdentique = false;
+        j = 1;
+        distance = 10000.0;
+        while ~estIdentique && j < nb_couleurs_Ref
+            %On compare les deux couleurs
+            %On récupère les valeurs de la couleur de l'image de référence
+            Red_ref = tab_couleurs_Ref(j, 1);
+            Green_ref = tab_couleurs_Ref(j, 2);
+            Blue_ref = tab_couleurs_Ref(j, 3);
+            %si elles sont identiques
+            if Red_spe == Red_ref && Green_spe == Green_ref && Blue_spe == Blue_ref
+               estIdentique = true;
+            else
+                %Sinon on calcule la distance euclidienne entre ces deux couleurs
+                distance_coul = sqrt((Red_spe - Red_ref)^2 + (Green_spe - Green_ref)^2 + (Blue_spe - Blue_ref)^2);
+                if distance_coul < distance
+                    distance = distance_coul;
+                end
+                j = j + 1;
+            end
+        end
+        %Si les deux couleurs sont identiques, on met 0.0 dans le tableau
+        %des distances
+        if estIdentique
+            tab_distances(1, i) = 0.0;
+        else
+            %sinon on met la valeur de la plus petite distance obtenue
+            tab_distances(1, i) = distance;
+        end
+    end   
 end
