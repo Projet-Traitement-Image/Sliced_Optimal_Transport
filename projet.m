@@ -8,8 +8,10 @@ Im7 = imread("images_projet/painting-2.jpg");
 Im8 = imread("images_projet/simple6.png");
 Im9 = imread("images_projet/simple7.png");
 Im10 = imread("images_projet/simple8.png");
+Im11 = imread("images_projet/simple_bleu.png");
+Im12 = imread("images_projet/simple_rouge.png");
 
-sliced_optimal_transport_RGB(Im7, Im6);
+sliced_optimal_transport_RGB(Im12, Im11);
 %sliced_optimal_transport_HSV(Im2, Im1);
 
 function sliced_optimal_transport_HSV(Ix, Iz)
@@ -148,11 +150,17 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   
   %Puis on analyse les différences de couleurs entre l'image de référence
   % et celle obtenue après la spécification
-  tab_distances = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res);
+  %On récupère également une image corrigée avec le nombre de couleurs qui
+  %ont été corrigées dans l'image obtenue dans l'image obtenue après la
+  %spécification
+  [tab_distances, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res);
   
   %Puis, on évalue les différences de distance afin de créer un code
   %couleur
   Image_diff = evaluation_distance(tab_distances, tab_couleurs_Res, Image_res);
+  
+  %On calcule le nombre de couleurs dans l'image corrigée
+  [tab_couleurs_correction, nombre_coul_correction] = compter_couleurs(Im_corrigee);
   
   %On transforme la matrice des couleurs de l'image de référence
   %en vecteurs colonnes pour afficher
@@ -173,6 +181,12 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   x_source = couleurs_source(:,1);
   y_source = couleurs_source(:,2);
   z_source = couleurs_source(:,3);
+  
+  %Et on pour l'image corrigée
+  couleurs_correction = tab_couleurs_correction(1:nombre_coul_correction-1,:);
+  x_corrigee = couleurs_correction(:,1);
+  y_corrigee = couleurs_correction(:,2);
+  z_corrigee = couleurs_correction(:,3);
     
   figure
   subplot(2,4,1);
@@ -227,6 +241,41 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   ylabel('Vert');
   zlabel('Bleu');
   title("Histogramme du résultat de la spécification");
+  
+  figure
+  subplot(3,2,1);
+  imagesc(Image_res);
+  title({'Résultat de la spécification' strcat(num2str(nombre_Res - 1), ' couleurs')});
+  
+  subplot(3,2,2);
+  imagesc(Im_corrigee);
+  title({'Résultat de la spécification corrigé' strcat(num2str(nombre_coul_correction - 1), ' couleurs') strcat(num2str(nombre_correction), ' couleurs corrigées')});
+  
+  subplot(3,2,3);
+  h_spe_bis = scatter3(x_spe, y_spe, z_spe, 30, 'filled');
+  h_spe_bis.CData = couleurs_spe./255;
+  xlim([0 255]);
+  ylim([0 255]);
+  zlim([0 255]);
+  xlabel('Rouge');
+  ylabel('Vert');
+  zlabel('Bleu');
+  title("Histogramme du résultat de la spécification");
+  
+  subplot(3,2,4);
+  h_corr = scatter3(x_corrigee, y_corrigee, z_corrigee, 30, 'filled');
+  h_corr.CData = couleurs_correction./255;
+  xlim([0 255]);
+  ylim([0 255]);
+  zlim([0 255]);
+  xlabel('Rouge');
+  ylabel('Vert');
+  zlabel('Bleu');
+  title("Histogramme du résultat de la spécification corrigé");
+  
+  subplot(3,2,5);
+  imagesc(label2rgb(Image_diff, mymap, 'green'));
+  title({'Différence de valeurs entre les pixels' 'de l''image de référence et ceux de l''image spécifiée'});  
 end
 
 function HCN = histogramme_cumule (I, histogramme_I, type)
@@ -442,15 +491,24 @@ function [tab_couleurs, nombre] = compter_couleurs(I)
  end
 end
 
-function tab_distances = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab_couleurs_Spe, nb_couleurs_Spe)
+function [tab_distances, Im_corrigee, compteur_correction] = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab_couleurs_Spe, nb_couleurs_Spe, Im_Spe)
     %On commence par passer les deux tableaux de couleurs en double
     %pour faciliter les calculs
     tab_couleurs_Ref = double(tab_couleurs_Ref);
     tab_couleurs_Spe = double(tab_couleurs_Spe);
     
+    %On récupère les 3 canaux de l'image obtenue après spécification
+    Red_channel_spe = Im_Spe(:,:,1);
+    Green_channel_spe = Im_Spe(:,:,2);
+    Blue_channel_spe = Im_Spe(:,:,3);
+    
     %On crée le tableau des différences de couleurs
     %égal au nombre de couleurs dans l'image obtenue après la spécification
     tab_distances = zeros(1, nb_couleurs_Spe - 1);
+    
+    %On crée un compteur sur les couleurs qui seront corrigées par la
+    %fonction
+    compteur_correction = 0;
     
     %On parcourt ensuite le tableau de couleurs de l'image obtenues après
     %spécification
@@ -464,6 +522,12 @@ function tab_distances = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab
         estIdentique = false;
         j = 1;
         distance = 10000.0;
+        %On définit des variables pour stocker les valeurs des canaux
+        %RGB de la couleur la plus proche de la couleur
+        %de l'image obtenue après spécification
+        Red_temp = 0;
+        Green_temp = 0;
+        Blue_temp = 0;
         while ~estIdentique && j < nb_couleurs_Ref
             %On compare les deux couleurs
             %On récupère les valeurs de la couleur de l'image de référence
@@ -478,6 +542,11 @@ function tab_distances = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab
                 distance_coul = sqrt((Red_spe - Red_ref)^2 + (Green_spe - Green_ref)^2 + (Blue_spe - Blue_ref)^2);
                 if distance_coul < distance
                     distance = distance_coul;
+                    %On conserve les valeurs des canaux RGB de cette
+                    %couleur de référence
+                    Red_temp = Red_ref;
+                    Green_temp = Green_ref;
+                    Blue_temp = Blue_ref;
                 end
                 j = j + 1;
             end
@@ -489,6 +558,17 @@ function tab_distances = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab
         else
             %sinon on met la valeur de la plus petite distance obtenue
             tab_distances(1, i) = distance;
+            %Et on met à jour les valeurs des canaux RGB de l'image obtenue
+            %après spécification avec la couleur de l'image de référence la
+            %plus proche
+            Red_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Red_temp;
+            Green_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Green_temp;
+            Blue_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Blue_temp;
+            %On incrémente le compteur de couleurs corrigées
+            compteur_correction = compteur_correction + 1;
         end
-    end   
+    end
+    %On refusionne les 3 canaux de l'image obtenue après la spécification
+    %pour former l'image corrigée
+    Im_corrigee = cat(3, Red_channel_spe, Green_channel_spe, Blue_channel_spe);
 end
