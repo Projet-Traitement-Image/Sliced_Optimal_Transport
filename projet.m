@@ -160,11 +160,14 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   %spécification et la couleur dans l'image de référence la plus proche
   %dépasse cette valeur, elle est corrigée
   seuil = 5.0;
-  [tab_distances, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
+  [tab_distances, tab_distances_corrigees, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
   
   %Puis, on évalue les différences de distance afin de créer un code
   %couleur
   Image_diff = evaluation_distance(tab_distances, tab_couleurs_Res, Image_res);
+  
+  %On fait de même pour l'image corrigée
+  Image_diff_corrigee = evaluation_distance(tab_distances_corrigees, tab_couleurs_Res, Image_res);
   
   %On calcule le nombre de couleurs dans l'image corrigée
   [tab_couleurs_correction, nombre_coul_correction] = compter_couleurs(Im_corrigee);
@@ -283,7 +286,11 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   
   subplot(3,2,5);
   imagesc(label2rgb(Image_diff, mymap, 'green'));
-  title({'Différence de valeurs entre les pixels de l''image' 'de référence et ceux du résultat de la spécification'});  
+  title({'Différence de valeurs entre les pixels de l''image' 'de référence et ceux du résultat de la spécification'});
+  
+  subplot(3,2,6);
+  imagesc(label2rgb(Image_diff_corrigee, mymap, 'green'));
+  title({'Différence de valeurs entre les pixels de l''image' 'de référence et ceux du résultat de la spécification après correction'});
 end
 
 function HCN = histogramme_cumule (I, histogramme_I, type)
@@ -501,7 +508,7 @@ function [tab_couleurs, nombre] = compter_couleurs(I)
  end
 end
 
-function [tab_distances, Im_corrigee, compteur_correction] = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab_couleurs_Spe, nb_couleurs_Spe, Im_Spe, seuil)
+function [tab_distances, tab_distances_corr, Im_corrigee, compteur_correction] = analyse_couleurs(tab_couleurs_Ref, nb_couleurs_Ref, tab_couleurs_Spe, nb_couleurs_Spe, Im_Spe, seuil)
     %On commence par passer les deux tableaux de couleurs en double
     %pour faciliter les calculs
     tab_couleurs_Ref = double(tab_couleurs_Ref);
@@ -515,6 +522,8 @@ function [tab_distances, Im_corrigee, compteur_correction] = analyse_couleurs(ta
     %On crée le tableau des différences de couleurs
     %égal au nombre de couleurs dans l'image obtenue après la spécification
     tab_distances = zeros(1, nb_couleurs_Spe - 1);
+    %On fait de même pour le tableau de l'image corrigée
+    tab_distances_corr = zeros(1, nb_couleurs_Spe - 1);
     
     %On crée un compteur sur les couleurs qui seront corrigées par la
     %fonction
@@ -565,6 +574,7 @@ function [tab_distances, Im_corrigee, compteur_correction] = analyse_couleurs(ta
         %des distances
         if estIdentique
             tab_distances(1, i) = 0.0;
+            tab_distances_corr(1, i) = 0.0;
         else
             %sinon on met la valeur de la plus petite distance obtenue
             tab_distances(1, i) = distance;
@@ -573,12 +583,17 @@ function [tab_distances, Im_corrigee, compteur_correction] = analyse_couleurs(ta
             %plus proche
             %Si la distance dépasse la valeur de seuil fixé, alors on
             %modifie la couleur dans l'image corrigée
-            if distance >= seuil
+            if distance > seuil
                 Red_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Red_temp;
                 Green_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Green_temp;
                 Blue_channel_spe(Im_Spe(:,:,1) == Red_spe & Im_Spe(:,:,2) == Green_spe & Im_Spe(:,:,3) == Blue_spe) = Blue_temp;
                 %On incrémente le compteur de couleurs corrigées
                 compteur_correction = compteur_correction + 1;
+                %On met la valeur de la distance pour la couleur corrigée à
+                %0.0
+                tab_distances_corr(1, i) = 0.0;
+            else
+                tab_distances_corr(1, i) = distance;
             end
         end
     end
