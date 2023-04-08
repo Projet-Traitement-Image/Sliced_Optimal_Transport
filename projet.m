@@ -1,7 +1,7 @@
 Im1 = imread("images_projet/dawn.jpg");
 Im2 = imread("images_projet/dawn_cold.jpg");
-Im3 = imread("images_projet/simple3.png");
-Im4 = imread("images_projet/simple4.png");
+Im3 = imread("images_projet/simple1.png");
+Im4 = imread("images_projet/simple2.png");
 Im5 = imread("images_projet/simple5.png");
 Im6 = imread("images_projet/painting-1.jpg");
 Im7 = imread("images_projet/painting-2.jpg");
@@ -161,6 +161,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   %dépasse cette valeur, elle est corrigée
   seuil = 20.0;
   [tab_distances, tab_distances_corrigees, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
+  %[Image_diff, Image_diff_corrigee, Im_corrigee, nombre_correction] = analyse_couleurs_bis(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
   
   %Puis, on évalue les différences de distance afin de créer un code
   %couleur
@@ -349,23 +350,6 @@ function Im_diff = evaluation_distance(tab_distances, tab_couleurs, I_spe)
         else
             Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 5;
         end
-    end
-end
-
-function res = evaluation_distance_bis(value)
-    if value == 0.0
-       %On récupère tous les pixels dont la couleur est située au même indice
-       res = 0;
-    elseif value > 0.0 && value < 3.0
-       res = 1;
-    elseif value >= 3.0 && value < 10.0
-       res = 2;
-    elseif value >= 10.0 && value < 17.5
-        res = 3;
-    elseif value >= 17.5 && value < 25.0
-        res = 4;
-    else
-        res = 5;
     end
 end
 
@@ -622,128 +606,4 @@ function [tab_distances, tab_distances_corr, Im_corrigee, compteur_correction] =
     %On refusionne les 3 canaux de l'image obtenue après la spécification
     %pour former l'image corrigée
     Im_corrigee = cat(3, Red_channel_spe, Green_channel_spe, Blue_channel_spe);
-end
-
-function [tab_distances, tab_distances_corr, Im_corrigee, compteur_correction] = analyse_couleurs_bis(Im_Ref, Im_Spe, seuil)
-    %On commence par passer les deux images couleurs en double
-    Red_channel_spe_temp = Im_Spe(:,:,1);
-    Green_channel_spe_temp = Im_Spe(:,:,2);
-    Blue_channel_spe_temp = Im_Spe(:,:,3);
-    
-    %pour faciliter les calculs
-    Im_Ref = double(Im_Ref);
-    Im_Spe = double(Im_Spe);
-    
-    %On récupère les dimensions de l'image de spécification
-    [m,n,~] = size(Im_Spe);
-    
-    %On récupère les 3 canaux de l'image obtenue après spécification
-    Red_channel_spe = Im_Spe(:,:,1);
-    Green_channel_spe = Im_Spe(:,:,2);
-    Blue_channel_spe = Im_Spe(:,:,3);
-    
-    %Ainsi que ceux de l'image de référence
-    Red_channel_ref = Im_Ref(:,:,1);
-    Green_channel_ref = Im_Ref(:,:,2);
-    Blue_channel_ref = Im_Ref(:,:,3);
-    
-    %On crée le tableau des différences de couleurs
-    %égal au nombre de couleurs dans l'image obtenue après la spécification
-    tab_distances = zeros(m,n);
-    %On fait de même pour le tableau de l'image corrigée
-    tab_distances_corr = zeros(m,n);
-    %Ainsi que l'image corrigée
-    Im_corrigee = zeros(m,n,3);
-    
-    %On crée un compteur sur les couleurs qui seront corrigées par la
-    %fonction
-    compteur_correction = 0;
-    
-    %On parcourt ensuite le tableau de couleurs de l'image obtenues après
-    %spécification
-    for i = 1:m
-        for j = 1:n           
-            %On récupère les différentes valeurs de canal RGB
-            Red_spe = Red_channel_spe(i, j);
-            Green_spe = Green_channel_spe(i, j);
-            Blue_spe = Blue_channel_spe(i, j);
-            %puis on regarde si cette couleur se retrouve dans l'image de
-            %référence
-            estIdentique = false;
-            k = 1;
-            l = 1;
-            distance = 10000.0;
-            %On définit des variables pour stocker les valeurs des canaux
-            %RGB de la couleur la plus proche de la couleur
-            %de l'image obtenue après spécification
-            Red_temp = 0.0;
-            Green_temp = 0.0;
-            Blue_temp = 0.0;
-            while ~estIdentique && k <= m
-                while ~estIdentique &&  l <= n
-                    %On compare les deux couleurs
-                    %On récupère les valeurs de la couleur de l'image de référence
-                    Red_ref = double(Red_channel_ref(k, l));
-                    Green_ref = double(Green_channel_ref(k, l));
-                    Blue_ref = double(Blue_channel_ref(k, l));
-                    %si elles sont identiques
-                    if Red_spe == Red_ref && Green_spe == Green_ref && Blue_spe == Blue_ref
-                       estIdentique = true;
-                    else
-                        %Sinon on calcule la distance euclidienne entre ces deux couleurs
-                        distance_coul = sqrt((Red_spe - Red_ref)^2 + (Green_spe - Green_ref)^2 + (Blue_spe - Blue_ref)^2);
-                        %sinon si la distance est plus petite que la
-                        %plus petite distance connue
-                        if distance_coul < distance
-                            distance = distance_coul;
-                            %On conserve les valeurs des canaux RGB de cette
-                            %couleur de référence
-                            Red_temp = Red_ref;
-                            Green_temp = Green_ref;
-                            Blue_temp = Blue_ref;
-                        end
-                    end
-                    l = l + 1;
-                end
-                k = k + 1;
-            end
-            %Si les deux couleurs sont identiques, on met 0.0 dans le tableau
-            %des distances
-            if estIdentique
-                tab_distances(i, j) = 0;
-                tab_distances_corr(i, j) = 0;
-                Im_corrigee(i,j,1) = Red_spe;
-                Im_corrigee(i,j,2) = Green_spe;
-                Im_corrigee(i,j,3) = Blue_spe;
-            else
-                %sinon on met la valeur de la plus petite distance obtenue
-                tab_distances(i, j) = evaluation_distance_bis(distance);
-                %Et on met à jour les valeurs des canaux RGB de l'image obtenue
-                %après spécification avec la couleur de l'image de référence la
-                %plus proche
-                %Si la distance dépasse la valeur de seuil fixé, alors on
-                %modifie la couleur dans l'image corrigée
-                if distance > seuil
-                    Red_channel_spe_temp(i,j) = Red_temp;
-                    Green_channel_spe_temp(i,j) = Green_temp;
-                    Blue_channel_spe_temp(i,j) = Blue_temp;
-                    %On incrémente le compteur de pixels corrigées
-                    compteur_correction = compteur_correction + 1;
-                    %On met la valeur de la distance pour la couleur corrigée à
-                    %0.0
-                    tab_distances_corr(i,j) = 0;
-                    Im_corrigee(i,j,1) = Red_ref;
-                    Im_corrigee(i,j,2) = Green_ref;
-                    Im_corrigee(i,j,3) = Blue_ref;
-                else
-                    tab_distances_corr(i,j) = evaluation_distance_bis(distance);
-                    Im_corrigee(i,j,1) = Red_spe;
-                    Im_corrigee(i,j,2) = Green_spe;
-                    Im_corrigee(i,j,3) = Blue_spe;
-                end
-            end
-        end
-    end
-    %On transforme l'image corrigée en uint8
-    Im_corrigee = cat(3,Red_channel_spe_temp,Green_channel_spe_temp,Blue_channel_spe_temp);
 end
