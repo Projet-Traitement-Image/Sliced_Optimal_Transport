@@ -1,5 +1,5 @@
 Im1 = imread("images_projet/dawn.jpg");
-Im2 = imread("images_projet/dawn_cold.jpg");
+Im2 = imread("images_projet/dawn_mist.jpg");
 Im3 = imread("images_projet/simple1.png");
 Im4 = imread("images_projet/simple2.png");
 Im5 = imread("images_projet/simple5.png");
@@ -159,16 +159,8 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   %cad, si la distance euclidienne entre une couleur obtenue après
   %spécification et la couleur dans l'image de référence la plus proche
   %dépasse cette valeur, elle est corrigée
-  seuil = 20.0;
-  [tab_distances, tab_distances_corrigees, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
-  %[Image_diff, Image_diff_corrigee, Im_corrigee, nombre_correction] = analyse_couleurs_bis(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
-  
-  %Puis, on évalue les différences de distance afin de créer un code
-  %couleur
-  Image_diff = evaluation_distance(tab_distances, tab_couleurs_Res, Image_res);
-  
-  %On fait de même pour l'image corrigée
-  Image_diff_corrigee = evaluation_distance(tab_distances_corrigees, tab_couleurs_Res, Image_res);
+  seuil = 5.0;
+  [Image_diff, Image_diff_corrigee, Im_corrigee, nombre_correction] = analyse_couleurs(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
   
   %On calcule le nombre de couleurs dans l'image corrigée
   [tab_couleurs_correction, nombre_coul_correction] = compter_couleurs(Im_corrigee);
@@ -198,7 +190,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   x_corrigee = couleurs_correction(:,1);
   y_corrigee = couleurs_correction(:,2);
   z_corrigee = couleurs_correction(:,3);
-    
+      
   figure
   subplot(2,4,1);
   imagesc(Ix);
@@ -253,7 +245,7 @@ function sliced_optimal_transport_RGB(Ix, Iz)
   ylabel('Vert');
   zlabel('Bleu');
   title("Histogramme du résultat de la spécification");
-  
+
   figure
   subplot(3,2,1);
   imagesc(Image_res);
@@ -327,29 +319,19 @@ function H = histogramme (I) % fonction qui prend en paramètre une image I
     end
 end
 
-function Im_diff = evaluation_distance(tab_distances, tab_couleurs, I_spe)
-    %On récupère la taille de l'image
-    [m,n,~] = size(I_spe);
-    %tab_distances
-    %On récupère la taille du tableau
-    tab_size = size(tab_distances, 2);
-    Im_diff = zeros(m,n);
-    
-    for i = 1:tab_size
-        if tab_distances(1,i) == 0.0
-           %On récupère tous les pixels dont la couleur est située au même indice
-           Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 0;
-        elseif tab_distances(1,i) > 0.0 && tab_distances(1,i) < 3.0
-           Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 1;
-        elseif tab_distances(1,i) >= 3.0 && tab_distances(1,i) < 10.0
-           Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 2;
-        elseif tab_distances(1,i) >= 10.0 && tab_distances(1,i) < 17.5
-            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 3;
-        elseif tab_distances(1,i) >= 17.5 && tab_distances(1,i) < 25.0
-            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 4;
-        else
-            Im_diff(I_spe(:,:,1) == tab_couleurs(i, 1) & I_spe(:,:,2) == tab_couleurs(i, 2) & I_spe(:,:,3) == tab_couleurs(i, 3)) = 5;
-        end
+function res = evaluation_distance(value)
+    if value == 0.0
+        res = 0;
+    elseif value > 0.0 && value < 3.0
+        res = 1;
+    elseif value >= 3.0 && value < 10.0
+        res = 2;
+    elseif value >= 10.0 && value < 17.5
+        res = 3;
+    elseif value >= 17.5 && value < 25.0
+        res = 4;
+    else
+        res = 5;
     end
 end
 
@@ -579,11 +561,11 @@ function [tab_distances, tab_distances_corr, Im_corrigee, compteur_correction] =
         %Si les deux couleurs sont identiques, on met 0.0 dans le tableau
         %des distances
         if estIdentique
-            tab_distances(1, i) = 0.0;
-            tab_distances_corr(1, i) = 0.0;
+            tab_distances(1, i) = 0;
+            tab_distances_corr(1, i) = 0;
         else
             %sinon on met la valeur de la plus petite distance obtenue
-            tab_distances(1, i) = distance;
+            tab_distances(1, i) = evaluation_distance(distance);
             %Et on met à jour les valeurs des canaux RGB de l'image obtenue
             %après spécification avec la couleur de l'image de référence la
             %plus proche
@@ -597,9 +579,9 @@ function [tab_distances, tab_distances_corr, Im_corrigee, compteur_correction] =
                 compteur_correction = compteur_correction + 1;
                 %On met la valeur de la distance pour la couleur corrigée à
                 %0.0
-                tab_distances_corr(1, i) = 0.0;
+                tab_distances_corr(1, i) = 0;
             else
-                tab_distances_corr(1, i) = distance;
+                tab_distances_corr(1, i) = evaluation_distance(distance);
             end
         end
     end
