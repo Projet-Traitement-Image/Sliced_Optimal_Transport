@@ -33,8 +33,7 @@ function sliced_optimal_transport_RGB_detaillee(Ix, Iz)
   %Puis on analyse les différences de couleurs entre l'image de référence
   % et celle obtenue après la spécification
   %On récupère également une image corrigée avec le nombre de couleurs qui
-  %ont été corrigées dans l'image obtenue dans l'image obtenue après la
-  %spécification
+  %ont été corrigées dans l'image obtenue après la spécification
   %Pour ce faire, on définit un seuil de correction de couleurs
   %cad, si la distance euclidienne entre une couleur obtenue après
   %spécification et la couleur dans l'image de référence la plus proche
