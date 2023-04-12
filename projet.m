@@ -14,5 +14,6 @@ Im13 = imread("images_projet/cold_colors_small.jpg");
 Im14 = imread("images_projet/warm_colors_small.jpg");
 
 %sliced_optimal_transport_RGB_detaillee(Im13, Im14);
-%sliced_optimal_transport_RGB_brute(Im13, Im14);
-sliced_optimal_transport_HSV_detaillee(Im3, Im4);
+%sliced_optimal_transport_RGB_simplifie(Im13, Im14);
+%sliced_optimal_transport_HSV_detaillee(Im3, Im4);
+sliced_optimal_transport_HSV_simplifie(Im7, Im6);
