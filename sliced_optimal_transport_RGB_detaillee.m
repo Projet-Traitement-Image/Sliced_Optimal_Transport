@@ -38,7 +38,7 @@ function sliced_optimal_transport_RGB_detaillee(Ix, Iz)
   %cad, si la distance euclidienne entre une couleur obtenue après
   %spécification et la couleur dans l'image de référence la plus proche
   %dépasse cette valeur, elle est corrigée
-  seuil = 5.0;
+  seuil = 10.0;
   [tab_distances, tab_distances_corrigees, Im_corrigee, nombre_correction] = analyse_couleurs_detaillee(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
   %[Image_diff, Image_diff_corrigee, Im_corrigee, nombre_correction] = analyse_couleurs_bis(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
 

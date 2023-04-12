@@ -59,7 +59,7 @@ function sliced_optimal_transport_HSV_simplifie(Ix, Iz)
   %cad, si la distance euclidienne entre une couleur obtenue après
   %spécification et la couleur dans l'image de référence la plus proche
   %dépasse cette valeur, elle est corrigée
-  seuil = 5.0;
+  seuil = 10.0;
   [Im_corrigee_HSV, nombre_correction] = analyse_couleurs_brute(tab_couleurs_Iz_HSV, nombre_Iz_HSV, tab_couleurs_Res_HSV, nombre_Res_HSV, HSV_res, seuil);
   
   %On crée une version HSV de l'image HSV en RGB

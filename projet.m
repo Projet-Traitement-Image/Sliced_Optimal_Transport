@@ -12,8 +12,10 @@ Im11 = imread("images_projet/simple_bleu.png");
 Im12 = imread("images_projet/simple_rouge.png");
 Im13 = imread("images_projet/cold_colors_small.jpg");
 Im14 = imread("images_projet/warm_colors_small.jpg");
+Im15 = imread("images_projet/mountains2.jpg");
+Im16 = imread("images_projet/sunset.png");
 
-%sliced_optimal_transport_RGB_detaillee(Im13, Im14);
-%sliced_optimal_transport_RGB_simplifie(Im13, Im14);
-%sliced_optimal_transport_HSV_detaillee(Im3, Im4);
-sliced_optimal_transport_HSV_simplifie(Im7, Im6);
+%sliced_optimal_transport_RGB_detaillee(Im15, Im14);
+sliced_optimal_transport_RGB_simplifie(Im4, Im5);
+%sliced_optimal_transport_HSV_detaillee(Im13, Im14);
+%sliced_optimal_transport_HSV_simplifie(Im7, Im6);

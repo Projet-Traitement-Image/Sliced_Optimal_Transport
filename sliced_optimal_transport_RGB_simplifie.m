@@ -39,7 +39,7 @@ function sliced_optimal_transport_RGB_simplifie(Ix, Iz)
   %cad, si la distance euclidienne entre une couleur obtenue après
   %spécification et la couleur dans l'image de référence la plus proche
   %dépasse cette valeur, elle est corrigée
-  seuil = 5.0;
+  seuil = 10.0;
   [Im_corrigee, nombre_correction] = analyse_couleurs_brute(tab_couleurs_Iz, nombre_Iz, tab_couleurs_Res, nombre_Res, Image_res, seuil);
   
   %On calcule le nombre de couleurs dans l'image corrigée
